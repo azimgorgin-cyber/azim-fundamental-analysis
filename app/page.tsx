@@ -318,14 +318,14 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
         <div className="monthly-scroll">
           <div className="monthly-chart" style={{ gridTemplateColumns: `repeat(${publishedMonthlySalesTrend.length}, minmax(82px, 1fr))` }} aria-label="نمودار مقایسه فروش ماهانه منتشرشده ۱۴۰۴ و ۱۴۰۵؛ میلیارد تومان">
             {publishedMonthlySalesTrend.map((row) => {
-              const tooltipRows: [string, number, string, string?][] = [["فروش ۱۴۰۴", row.sales1404, "previous"]];
-              if (row.sales1405 !== null) tooltipRows.push(["فروش ۱۴۰۵", row.sales1405, "sales"]);
+              const sales1405 = row.sales1405 ?? 0;
+              const tooltipRows: [string, number, string, string?][] = [["فروش ۱۴۰۴", row.sales1404, "previous"], ["فروش ۱۴۰۵", sales1405, "sales"]];
               return (
-                <div className="monthly-group" key={row.month} tabIndex={0} aria-label={`${row.month}، فروش ۱۴۰۴ ${faNumber.format(row.sales1404)} میلیارد تومان${row.sales1405 === null ? "؛ رقم ۱۴۰۵ هنوز منتشر نشده" : ` و فروش ۱۴۰۵ ${faNumber.format(row.sales1405)} میلیارد تومان`}`}>
+                <div className="monthly-group" key={row.month} tabIndex={0} aria-label={`${row.month}، فروش ۱۴۰۴ ${faNumber.format(row.sales1404)} و فروش ۱۴۰۵ ${faNumber.format(sales1405)} میلیارد تومان`}>
                   <ChartTooltip title={row.month} rows={tooltipRows} />
                   <div className="month-bars">
                     <span className="previous-bar" style={{ height: `${(row.sales1404 / monthlySalesMax) * 100}%` }} />
-                    {row.sales1405 !== null && <span className="sales-bar" style={{ height: `${(row.sales1405 / monthlySalesMax) * 100}%` }} />}
+                    <span className="sales-bar" style={{ height: `${(sales1405 / monthlySalesMax) * 100}%` }} />
                   </div>
                   <small>{row.month}</small>
                 </div>
