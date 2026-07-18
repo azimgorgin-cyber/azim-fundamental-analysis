@@ -76,42 +76,53 @@ async function mapLimited(items, limit, mapper) {
   return results;
 }
 
-const search = await fetchWithRetry(codalSearchUrl);
-const monthlyLetters = search.Letters
-  .filter((letter) => letter.Title.startsWith("گزارش فعالیت ماهانه"))
-  .filter((letter) => /۱۴۰۴|۱۴۰۵/.test(letter.Title));
-
-const reports = await mapLimited(monthlyLetters, 4, async (letter) => {
-  const url = new URL(letter.Url, "https://www.codal.ir").href;
-  const html = await fetchWithRetry(url, "text");
-  return parseMonthlyReport(html, url, letter.TracingNo);
-});
-
-const latestByPeriod = new Map();
-for (const report of reports) {
-  const existing = latestByPeriod.get(report.period);
-  if (!existing || report.tracingNo > existing.tracingNo) latestByPeriod.set(report.period, report);
-}
-
 const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const monthEndDays = ["31", "31", "31", "31", "31", "31", "30", "30", "30", "30", "30", "29"];
-const monthlySalesTrend = monthNames.map((month, index) => {
-  const suffix = `${String(index + 1).padStart(2, "0")}/${monthEndDays[index]}`;
-  const report1404 = latestByPeriod.get(`1404/${suffix}`);
-  const report1405 = [...latestByPeriod.values()].find((report) => report.period.startsWith(`1405/${String(index + 1).padStart(2, "0")}/`));
-  if (!report1404) throw new Error(`Missing official monthly report for 1404/${suffix}`);
-  return {
-    month,
-    sales1404: report1404.salesBillionToman,
-    sales1405: report1405?.salesBillionToman ?? null,
-    source1404: report1404.url,
-    source1405: report1405?.url ?? null,
-  };
-});
+let monthlySalesTrend = current.monthlySalesTrend;
+let latestMonthlyReport = {
+  period: current.sources.codalMonthly.asOf,
+  publishedAt: current.sources.codalMonthly.publishedAt,
+  url: current.sources.codalMonthly.url,
+};
 
-const latestMonthlyReport = [...latestByPeriod.values()]
-  .filter((report) => report.period.startsWith("1405/"))
-  .sort((a, b) => b.period.localeCompare(a.period))[0];
+try {
+  const search = await fetchWithRetry(codalSearchUrl);
+  const monthlyLetters = search.Letters
+    .filter((letter) => letter.Title.startsWith("گزارش فعالیت ماهانه"))
+    .filter((letter) => /۱۴۰۴|۱۴۰۵/.test(letter.Title));
+
+  const reports = await mapLimited(monthlyLetters, 4, async (letter) => {
+    const url = new URL(letter.Url, "https://www.codal.ir").href;
+    const html = await fetchWithRetry(url, "text");
+    return parseMonthlyReport(html, url, letter.TracingNo);
+  });
+
+  const latestByPeriod = new Map();
+  for (const report of reports) {
+    const existing = latestByPeriod.get(report.period);
+    if (!existing || report.tracingNo > existing.tracingNo) latestByPeriod.set(report.period, report);
+  }
+
+  monthlySalesTrend = monthNames.map((month, index) => {
+    const suffix = `${String(index + 1).padStart(2, "0")}/${monthEndDays[index]}`;
+    const report1404 = latestByPeriod.get(`1404/${suffix}`);
+    const report1405 = [...latestByPeriod.values()].find((report) => report.period.startsWith(`1405/${String(index + 1).padStart(2, "0")}/`));
+    if (!report1404) throw new Error(`Missing official monthly report for 1404/${suffix}`);
+    return {
+      month,
+      sales1404: report1404.salesBillionToman,
+      sales1405: report1405?.salesBillionToman ?? null,
+      source1404: report1404.url,
+      source1405: report1405?.url ?? null,
+    };
+  });
+
+  latestMonthlyReport = [...latestByPeriod.values()]
+    .filter((report) => report.period.startsWith("1405/"))
+    .sort((a, b) => b.period.localeCompare(a.period))[0] ?? latestMonthlyReport;
+} catch (error) {
+  console.warn(`Codal refresh failed; keeping the last official monthly dataset: ${error.message}`);
+}
 
 let marketSnapshot = current.marketSnapshot;
 let shareholders = current.shareholders;
