@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { analysisGuide } from "../app/data/analysis-guide.ts";
 
 const data = JSON.parse(await readFile(new URL("../app/data/dezagros-official.json", import.meta.url), "utf8"));
 
@@ -23,4 +24,16 @@ test("official data package is complete and internally reconciled", () => {
   assert.equal(monthlyTotal, check.monthlyTotal);
   assert.equal(Math.round((check.monthlyTotal - check.annualTotal) * 10) / 10, check.difference);
   assert.ok(check.differencePercent <= 1);
+});
+
+test("every educational guide has the complete learning structure", () => {
+  assert.ok(Object.keys(analysisGuide).length >= 15);
+  for (const guide of Object.values(analysisGuide)) {
+    assert.ok(guide.summary.length > 50);
+    assert.ok(guide.whyItMatters.length > 80);
+    assert.ok(guide.howToRead.length >= 4);
+    assert.ok(guide.positiveSignals.length >= 3);
+    assert.ok(guide.warningSignals.length >= 3);
+    assert.ok(guide.mentalPractice.length > 40);
+  }
 });

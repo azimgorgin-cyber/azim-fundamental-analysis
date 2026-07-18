@@ -40,6 +40,8 @@ test("server-renders the Azim analysis dashboard", async () => {
   assert.match(html, /تبدیل سود به نقد ۱۴۰۴/);
   assert.match(html, /فشار سرمایه در گردش/);
   assert.match(html, /جریان نقد عملیاتی/);
+  assert.match(html, /راهنمای آموزشی فروش و سود خالص پنج‌ساله/);
+  assert.match(html, /راهنمای آموزشی کیفیت سود و جریان نقد/);
   assert.match(html, /سرمایه ثبت‌شده/);
   assert.match(html, /میلیارد تومان/);
   assert.doesNotMatch(html, /رقم ۱۴۰۵ هنوز منتشر نشده/);
@@ -54,6 +56,8 @@ test("starter preview is fully removed", async () => {
   ]);
 
   assert.match(page, /دارویی و نهاده‌های زاگرس دارو پارسیان/);
+  assert.match(page, /guideKey="dcf"/);
+  assert.match(page, /guideKey="relativeValuation"/);
   assert.match(layout, /lang="fa" dir="rtl"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/_sites-preview", import.meta.url)));

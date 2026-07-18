@@ -87,6 +87,41 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 24px; box-shadow: 0 3px 15px rgba(20,35,29,.035); }
 .panel-label { color: var(--muted); font-size: 10px; letter-spacing: .2px; margin-bottom: 8px; }
 .panel h2 { font-size: 17px; margin: 0 0 9px; letter-spacing: -.35px; }
+.guided-title { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 9px; }
+.guided-title h2 { margin: 0; }
+.guide-label-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.guide-label-row .panel-label { margin-bottom: 0; }
+.guide-button { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #bfd8cd; border-radius: 999px; background: #f3faf7; color: var(--green); padding: 4px 8px; font-family: inherit; font-size: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: .18s ease; }
+.guide-button:hover, .guide-button:focus-visible { background: var(--green-soft); border-color: var(--green-2); transform: translateY(-1px); outline: none; }
+.score-card .guide-button { background: rgba(255,255,255,.12); color: white; border-color: rgba(255,255,255,.28); }
+.score-card .guide-button:hover, .score-card .guide-button:focus-visible { background: rgba(255,255,255,.2); }
+.guide-overlay { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(8, 24, 18, .72); backdrop-filter: blur(5px); direction: rtl; }
+.guide-sheet { width: min(780px, 100%); max-height: min(88vh, 900px); overflow-y: auto; overscroll-behavior: contain; background: #fff; color: var(--ink); border-radius: 20px; box-shadow: 0 24px 80px rgba(5, 22, 15, .35); padding: 0 30px 26px; text-align: right; }
+.guide-sheet > header { position: sticky; z-index: 2; top: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 24px 0 17px; background: linear-gradient(#fff 85%, rgba(255,255,255,.88)); border-bottom: 1px solid var(--line); }
+.guide-sheet > header span { color: var(--green-2); font-size: 9px; font-weight: 700; }
+.guide-sheet > header h2, .score-card .guide-sheet > header h2 { color: var(--ink); font-size: 24px; margin: 4px 0 0; }
+.guide-sheet > header button { flex: 0 0 auto; width: 32px; height: 32px; border: 0; border-radius: 50%; background: #eef3f1; color: var(--ink); font-size: 20px; cursor: pointer; }
+.guide-sheet p, .score-card .guide-sheet p { color: #3f5149; font-size: 11px; line-height: 2.05; margin: 6px 0 0; }
+.guide-intro { margin: 20px 0 16px; padding: 17px 18px; border-radius: 14px; background: linear-gradient(135deg, var(--green-soft), #f8fbfa); border-right: 4px solid var(--green-2); }
+.guide-intro strong { color: var(--green); font-size: 11px; }
+.guide-sheet section { margin-top: 19px; }
+.guide-sheet section h3 { font-size: 13px; margin: 0 0 8px; }
+.guide-sheet ol, .guide-sheet ul { margin: 0; padding-right: 20px; }
+.guide-sheet li { color: #3f5149; font-size: 10px; line-height: 2; padding-right: 3px; }
+.guide-sheet li::marker { color: var(--green-2); font-weight: 700; }
+.guide-signals { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.guide-signals section { border-radius: 13px; padding: 15px 16px; }
+.guide-signals .good { background: #eff8f4; }
+.guide-signals .good h3 { color: var(--green); }
+.guide-signals .bad { background: #fbf2ef; }
+.guide-signals .bad h3 { color: var(--danger); }
+.guide-signals .bad li::marker { color: var(--danger); }
+.guide-mistake { padding: 14px 16px; border: 1px solid #ecd7d1; border-radius: 13px; }
+.guide-mistake h3 { color: var(--danger); }
+.mental-practice { padding: 16px 18px; border-radius: 13px; background: #f3effa; border-right: 4px solid #7157a8; }
+.mental-practice h3 { color: #5e458f; }
+.guide-sheet > footer { width: 100%; margin: 22px 0 0; padding: 17px 0 0; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 8px; }
+.guide-sheet > footer button { flex: 0 0 auto; border: 0; border-radius: 9px; background: var(--green); color: #fff; padding: 8px 17px; font-family: inherit; cursor: pointer; }
 .panel p { margin: 0; color: var(--muted); font-size: 12px; }
 .summary-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; }
 .score-card { background: linear-gradient(135deg, #0b5943, #154b3b); color: white; border: 0; box-shadow: 0 12px 32px rgba(13,97,72,.18); }
@@ -336,6 +371,12 @@ footer { width: min(1180px, calc(100% - 40px)); margin: 0 auto; border-top: 1px 
   .valuation-hero { flex-direction: column; }
   .fair-value { border-right: 0; border-top: 1px solid var(--line); padding: 16px 0 0; width: 100%; }
   footer { padding: 20px 16px 28px; flex-direction: column; }
+  .guide-overlay { padding: 0; place-items: end center; }
+  .guide-sheet { width: 100%; max-height: 94vh; border-radius: 20px 20px 0 0; padding: 0 18px 22px; }
+  .guide-sheet > header { padding-top: 19px; }
+  .guide-sheet > header h2, .score-card .guide-sheet > header h2 { font-size: 20px; }
+  .guide-signals { grid-template-columns: 1fr; }
+  .guide-sheet > footer { width: 100%; padding: 15px 0 0; flex-direction: row; }
 }
 
 @media (max-width: 520px) {
