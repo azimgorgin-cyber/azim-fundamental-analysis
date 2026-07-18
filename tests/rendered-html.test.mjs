@@ -36,6 +36,10 @@ test("server-renders the Azim analysis dashboard", async () => {
   assert.match(html, /کنترل تطبیق فروش ۱۴۰۴/);
   assert.match(html, /به‌روزرسانی خودکار روزانه/);
   assert.match(html, /حاشیه سود: محاسبه‌شده/);
+  assert.match(html, /کیفیت سود و جریان نقد/);
+  assert.match(html, /تبدیل سود به نقد ۱۴۰۴/);
+  assert.match(html, /فشار سرمایه در گردش/);
+  assert.match(html, /جریان نقد عملیاتی/);
   assert.match(html, /سرمایه ثبت‌شده/);
   assert.match(html, /میلیارد تومان/);
   assert.doesNotMatch(html, /رقم ۱۴۰۵ هنوز منتشر نشده/);

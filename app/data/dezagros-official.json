@@ -19,6 +19,18 @@
       "asOf": "1405/03/31",
       "publishedAt": "1405/04/02 00:32:46",
       "url": "https://www.codal.ir/Reports/Decision.aspx?LetterSerial=6u1x56oerl9Nt0YOOObOOOTw4oQQQaQQQA%3d%3d&rt=0&let=58&ct=0&ft=-1"
+    },
+    "codalCashFlow": {
+      "status": "official_audited",
+      "asOf": "1404/12/29",
+      "publishedAt": "1405/04/20 17:58:21",
+      "url": "https://www.codal.ir/Reports/Decision.aspx?LetterSerial=Wrkmb17ieruWpxFvobgbyw%3d%3d&rt=0&let=6&ct=0&ft=-1&sheetId=9"
+    },
+    "codalBalanceSheet": {
+      "status": "official_audited",
+      "asOf": "1404/12/29",
+      "publishedAt": "1405/04/20 17:58:21",
+      "url": "https://www.codal.ir/Reports/Decision.aspx?LetterSerial=Wrkmb17ieruWpxFvobgbyw%3d%3d&rt=0&let=6&ct=0&ft=-1&sheetId=0"
     }
   },
   "marketSnapshot": {
@@ -204,6 +216,55 @@
       "source1405": null
     }
   ],
+  "cashQuality": {
+    "status": "official_and_derived",
+    "unit": "billion_toman",
+    "annual": [
+      {
+        "year": "۱۴۰۳",
+        "netProfit": 995.1,
+        "operatingCashFlow": 0,
+        "capitalExpenditure": 0,
+        "freeCashFlow": 0,
+        "cashConversionPercent": 0
+      },
+      {
+        "year": "۱۴۰۴",
+        "netProfit": 1526.2,
+        "operatingCashFlow": 2110.5,
+        "capitalExpenditure": 52.6,
+        "freeCashFlow": 2057.9,
+        "cashConversionPercent": 138.3
+      }
+    ],
+    "endingCash": 1801.3,
+    "workingCapital": {
+      "salesGrowthPercent": 39.2,
+      "receivables": {
+        "current": 3193.3,
+        "prior": 1928.3,
+        "growthPercent": 65.6
+      },
+      "inventory": {
+        "current": 858.2,
+        "prior": 565,
+        "growthPercent": 51.9
+      },
+      "tradePayables": {
+        "current": 668.4,
+        "prior": 607.6,
+        "growthPercent": 10
+      },
+      "currentRatio": {
+        "current": 1.56,
+        "prior": 2
+      }
+    },
+    "assessment": {
+      "label": "کیفیت سود قوی؛ سرمایه در گردش نیازمند پایش",
+      "note": "جریان نقد عملیاتی ۱۴۰۴ از سود خالص بیشتر است، اما رشد مطالبات و موجودی کالا از رشد فروش جلو زده است."
+    }
+  },
   "validation": {
     "monthlyToAnnualSales1404": {
       "status": "matched_with_difference",

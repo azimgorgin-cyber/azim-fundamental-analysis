@@ -9,6 +9,7 @@ const TSETMC_INSTRUMENT_ID = officialData.instrumentId;
 const TSETMC_URL = `https://www.tsetmc.com/instInfo/${TSETMC_INSTRUMENT_ID}`;
 const CODAL_URL = officialData.sources.codalAnnual.url;
 const MONTHLY_CODAL_URL = officialData.sources.codalMonthly.url;
+const CASH_FLOW_CODAL_URL = officialData.sources.codalCashFlow.url;
 
 type MarketSnapshot = {
   lastPrice: number;
@@ -33,6 +34,7 @@ const officialShareholders: Shareholder[] = officialData.shareholders;
 const yearlyTrend = officialData.yearlyTrend;
 const seasonalTrend = officialData.seasonalTrend;
 const monthlySalesTrend = officialData.monthlySalesTrend;
+const cashQuality = officialData.cashQuality;
 const publishedMonthlySalesTrend = monthlySalesTrend.filter((row) => row.sales1405 !== null);
 const seasonalPerformance = seasonalTrend.map((row, index) => {
   const months = monthlySalesTrend.slice(index * 3, index * 3 + 3);
@@ -207,6 +209,8 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
   const seasonalMarginScaleMax = 50;
   const seasonalMarginLinePoints = seasonalPerformance.map((row, index) => `${12.5 + index * 25},${100 - (row.margin1404 / seasonalMarginScaleMax) * 100}`).join(" ");
   const monthlySalesMax = Math.max(...publishedMonthlySalesTrend.flatMap((row) => [row.sales1404, row.sales1405 ?? 0]));
+  const cashQualityMax = Math.max(...cashQuality.annual.flatMap((row) => [row.netProfit, row.operatingCashFlow]));
+  const latestCashQuality = cashQuality.annual[cashQuality.annual.length - 1];
   const marginScaleMax = 50;
   const marginLinePoints = financialRows.map((row, index) => `${10 + index * 20},${100 - (row.margin / marginScaleMax) * 100}`).join(" ");
   const marketValue = (market.closingPrice * market.shares) / 10_000_000_000_000;
@@ -343,6 +347,55 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      <section className="panel cash-quality-panel">
+        <div className="panel-head">
+          <div><span className="panel-label">صورت جریان وجوه نقد و ترازنامه · کدال</span><h2>کیفیت سود و جریان نقد</h2><DataBadges items={["حسابرسی‌شده", "نسبت‌ها: محاسبه‌شده"]} /></div>
+          <a className="source-link" href={CASH_FLOW_CODAL_URL} target="_blank" rel="noreferrer">صورت جریان وجوه نقد کدال</a>
+        </div>
+        <div className="cash-quality-layout">
+          <div className="cash-chart-block">
+            <ChartLegend items={[["سود خالص", "profit"], ["جریان نقد عملیاتی", "cash-flow"]]} />
+            <div className="cash-chart" aria-label="مقایسه سود خالص و جریان نقد عملیاتی ۱۴۰۳ و ۱۴۰۴؛ میلیارد تومان">
+              {cashQuality.annual.map((row) => (
+                <div className="cash-group" key={row.year} tabIndex={0} aria-label={`${row.year}، سود خالص ${faNumber.format(row.netProfit)}، جریان نقد عملیاتی ${faNumber.format(row.operatingCashFlow)} میلیارد تومان و تبدیل سود به نقد ${faPercent.format(row.cashConversionPercent)} درصد`}>
+                  <ChartTooltip title={`سال ${row.year}`} rows={[["سود خالص", row.netProfit, "profit"], ["جریان نقد عملیاتی", row.operatingCashFlow, "cash-flow"], ["تبدیل سود به نقد", row.cashConversionPercent, "conversion", "٪"]]} />
+                  <div className="cash-bars">
+                    <span className="profit-bar" style={{ height: `${(row.netProfit / cashQualityMax) * 100}%` }} />
+                    <span className="cash-flow-bar" style={{ height: `${(row.operatingCashFlow / cashQualityMax) * 100}%` }} />
+                  </div>
+                  <small>{row.year}</small>
+                  <b>{faPercent.format(row.cashConversionPercent)}٪</b>
+                </div>
+              ))}
+            </div>
+            <div className="cash-chart-note">درصد زیر هر سال: نسبت جریان نقد عملیاتی به سود خالص</div>
+          </div>
+
+          <div className="cash-quality-summary">
+            <div className="cash-metrics">
+              <span><small>تبدیل سود به نقد ۱۴۰۴</small><strong>{faPercent.format(latestCashQuality.cashConversionPercent)}٪</strong><em>از ۶۱٪ در ۱۴۰۳</em></span>
+              <span><small>جریان نقد آزاد ۱۴۰۴</small><strong>{faNumber.format(latestCashQuality.freeCashFlow)}</strong><em>میلیارد تومان · محاسبه‌شده</em></span>
+              <span><small>موجودی نقد پایان سال</small><strong>{faNumber.format(cashQuality.endingCash)}</strong><em>میلیارد تومان · رسمی</em></span>
+            </div>
+            <div className="quality-verdict"><strong>{cashQuality.assessment.label}</strong><p>{cashQuality.assessment.note}</p></div>
+          </div>
+
+          <div className="working-capital-block">
+            <div className="working-capital-head"><strong>فشار سرمایه در گردش</strong><span>رشد سالانه · ۱۴۰۴</span></div>
+            <div className="growth-comparison">
+              {([
+                ["فروش", cashQuality.workingCapital.salesGrowthPercent, "benchmark"],
+                ["مطالبات", cashQuality.workingCapital.receivables.growthPercent, "warning"],
+                ["موجودی کالا", cashQuality.workingCapital.inventory.growthPercent, "warning"],
+              ] as const).map(([label, value, tone]) => (
+                <div key={label}><span><b>{label}</b><strong>{faPercent.format(value)}٪</strong></span><i><em className={tone} style={{ width: `${Math.min(value / 70, 1) * 100}%` }} /></i></div>
+              ))}
+            </div>
+            <div className="ratio-note"><span>نسبت جاری</span><strong>{faNumber.format(cashQuality.workingCapital.currentRatio.current)}</strong><small>۱۴۰۳: {faNumber.format(cashQuality.workingCapital.currentRatio.prior)}</small></div>
           </div>
         </div>
       </section>

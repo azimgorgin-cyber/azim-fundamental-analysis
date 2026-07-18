@@ -59,6 +59,47 @@ function parseMonthlyReport(html, url, tracingNo) {
   };
 }
 
+function parseCodalDatasource(html, sheetName) {
+  const match = html.match(/var datasource\s*=\s*(\{.*?\});\s*<\/script>/s);
+  if (!match) throw new Error(`Codal datasource was not found for ${sheetName}`);
+  return JSON.parse(match[1]);
+}
+
+function normalizeLabel(value) {
+  return String(value ?? "")
+    .replaceAll("ي", "ی")
+    .replaceAll("ك", "ک")
+    .replace(/[­‌ـ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function statementTable(data, aliasName) {
+  const table = data.sheets?.flatMap((sheet) => sheet.tables ?? []).find((item) => item.aliasName === aliasName);
+  if (!table) throw new Error(`${aliasName} table was not found`);
+  return table;
+}
+
+function statementColumn(table, period) {
+  const header = table.cells.find((cell) => /^[A-Z]1$/.test(cell.address) && String(cell.value).includes(period));
+  if (!header) throw new Error(`Statement column for ${period} was not found`);
+  return header.address[0];
+}
+
+function statementValue(table, column, labelFragment) {
+  const label = table.cells.find((cell) => /^A\d+$/.test(cell.address) && normalizeLabel(cell.value).includes(normalizeLabel(labelFragment)));
+  if (!label) throw new Error(`Statement row ${labelFragment} was not found`);
+  const row = label.address.slice(1);
+  const value = Number(table.cells.find((cell) => cell.address === `${column}${row}`)?.value);
+  if (!Number.isFinite(value)) throw new Error(`Statement value ${labelFragment} was not found`);
+  return value / 10_000;
+}
+
+function round(value, digits = 1) {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+}
+
 function normalizePersianName(value) {
   return value.replace(/^BFM/, "").replaceAll("ي", "ی").replaceAll("ك", "ک").replace(/\s+/g, " ").trim();
 }
@@ -79,6 +120,7 @@ async function mapLimited(items, limit, mapper) {
 const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const monthEndDays = ["31", "31", "31", "31", "31", "31", "30", "30", "30", "30", "30", "29"];
 let monthlySalesTrend = current.monthlySalesTrend;
+let cashQuality = current.cashQuality;
 let latestMonthlyReport = {
   period: current.sources.codalMonthly.asOf,
   publishedAt: current.sources.codalMonthly.publishedAt,
@@ -122,6 +164,64 @@ try {
     .sort((a, b) => b.period.localeCompare(a.period))[0] ?? latestMonthlyReport;
 } catch (error) {
   console.warn(`Codal refresh failed; keeping the last official monthly dataset: ${error.message}`);
+}
+
+try {
+  const annualUrl = current.sources.codalAnnual.url;
+  const [cashFlowHtml, balanceSheetHtml] = await Promise.all([
+    fetchWithRetry(`${annualUrl}&sheetId=9`, "text"),
+    fetchWithRetry(`${annualUrl}&sheetId=0`, "text"),
+  ]);
+  const cashFlow = statementTable(parseCodalDatasource(cashFlowHtml, "cash flow"), "CashFlow");
+  const balanceSheet = statementTable(parseCodalDatasource(balanceSheetHtml, "balance sheet"), "BalanceSheet");
+  const cashCurrentColumn = statementColumn(cashFlow, "1404/12/29");
+  const cashPriorColumn = statementColumn(cashFlow, "1403/12/30");
+  const balanceCurrentColumn = statementColumn(balanceSheet, "1404/12/29");
+  const balancePriorColumn = statementColumn(balanceSheet, "1403/12/30");
+  const profitCurrent = current.yearlyTrend.find((row) => row.year === "۱۴۰۴").netProfit;
+  const profitPrior = current.yearlyTrend.find((row) => row.year === "۱۴۰۳").netProfit;
+  const salesCurrent = current.yearlyTrend.find((row) => row.year === "۱۴۰۴").sales;
+  const salesPrior = current.yearlyTrend.find((row) => row.year === "۱۴۰۳").sales;
+  const buildCashYear = (year, column, netProfit) => {
+    const operatingCashFlow = statementValue(cashFlow, column, "جریان خالص ورود (خروج) نقد حاصل از فعالیت های عملیاتی");
+    const tangibleCapex = Math.abs(statementValue(cashFlow, column, "پرداخت های نقدی برای خرید دارایی های ثابت مشهود"));
+    const intangibleCapex = Math.abs(statementValue(cashFlow, column, "پرداخت های نقدی برای خرید دارایی های نامشهود"));
+    const capitalExpenditure = tangibleCapex + intangibleCapex;
+    return {
+      year,
+      netProfit,
+      operatingCashFlow: round(operatingCashFlow),
+      capitalExpenditure: round(capitalExpenditure),
+      freeCashFlow: round(operatingCashFlow - capitalExpenditure),
+      cashConversionPercent: round((operatingCashFlow / netProfit) * 100),
+    };
+  };
+  const balancePair = (label) => ({
+    current: statementValue(balanceSheet, balanceCurrentColumn, label),
+    prior: statementValue(balanceSheet, balancePriorColumn, label),
+  });
+  const receivables = balancePair("دریافتنی های تجاری و سایر دریافتنی ها");
+  const inventory = balancePair("موجودی مواد و کالا");
+  const tradePayables = balancePair("پرداختنی های تجاری و سایر پرداختنی ها");
+  const currentAssets = balancePair("جمع دارایی های جاری");
+  const currentLiabilities = balancePair("جمع بدهی های جاری");
+  const withGrowth = (pair) => ({ current: round(pair.current), prior: round(pair.prior), growthPercent: round(((pair.current / pair.prior) - 1) * 100) });
+  cashQuality = {
+    status: "official_and_derived",
+    unit: "billion_toman",
+    annual: [buildCashYear("۱۴۰۳", cashPriorColumn, profitPrior), buildCashYear("۱۴۰۴", cashCurrentColumn, profitCurrent)],
+    endingCash: round(statementValue(balanceSheet, balanceCurrentColumn, "موجودی نقد")),
+    workingCapital: {
+      salesGrowthPercent: round(((salesCurrent / salesPrior) - 1) * 100),
+      receivables: withGrowth(receivables),
+      inventory: withGrowth(inventory),
+      tradePayables: withGrowth(tradePayables),
+      currentRatio: { current: round(currentAssets.current / currentLiabilities.current, 2), prior: round(currentAssets.prior / currentLiabilities.prior, 2) },
+    },
+    assessment: current.cashQuality.assessment,
+  };
+} catch (error) {
+  console.warn(`Codal statement refresh failed; keeping the last audited cash-quality dataset: ${error.message}`);
 }
 
 let marketSnapshot = current.marketSnapshot;
@@ -178,6 +278,7 @@ const next = {
   marketSnapshot,
   shareholders,
   monthlySalesTrend,
+  cashQuality,
   validation: {
     ...current.validation,
     monthlyToAnnualSales1404: {

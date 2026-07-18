@@ -11,6 +11,12 @@ test("official data package is complete and internally reconciled", () => {
   assert.equal(data.monthlySalesTrend.filter((row) => row.sales1405 !== null).length, 3);
   assert.match(data.sources.codalMonthly.url, /^https:\/\/www\.codal\.ir\/Reports\/Decision\.aspx/);
   assert.match(data.sources.tsetmc.url, /^https:\/\/www\.tsetmc\.com\/instInfo\//);
+  assert.match(data.sources.codalCashFlow.url, /sheetId=9$/);
+  assert.equal(data.cashQuality.annual.length, 2);
+  assert.equal(data.cashQuality.annual[1].operatingCashFlow, 2110.5);
+  assert.ok(data.cashQuality.annual[1].cashConversionPercent > 100);
+  assert.ok(data.cashQuality.workingCapital.receivables.growthPercent > data.cashQuality.workingCapital.salesGrowthPercent);
+  assert.ok(data.cashQuality.workingCapital.inventory.growthPercent > data.cashQuality.workingCapital.salesGrowthPercent);
 
   const monthlyTotal = Math.round(data.monthlySalesTrend.reduce((sum, row) => sum + row.sales1404, 0) * 10) / 10;
   const check = data.validation.monthlyToAnnualSales1404;
