@@ -35,7 +35,7 @@ test("starter preview is fully removed", async () => {
     readFile(new URL("../package.json", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /فولاد مبارکه اصفهان/);
+  assert.match(page, /دارویی و نهاده‌های زاگرس دارو پارسیان/);
   assert.match(layout, /lang="fa" dir="rtl"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/_sites-preview", import.meta.url)));
