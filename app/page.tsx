@@ -37,9 +37,11 @@ const publishedMonthlySalesTrend = monthlySalesTrend.filter((row) => row.sales14
 const seasonalPerformance = seasonalTrend.map((row, index) => {
   const months = monthlySalesTrend.slice(index * 3, index * 3 + 3);
   const hasComplete1405Quarter = months.length === 3 && months.every((month) => month.sales1405 !== null);
+  const sales1404 = Math.round(months.reduce((sum, month) => sum + month.sales1404, 0) * 10) / 10;
   return {
     ...row,
-    sales1404: Math.round(months.reduce((sum, month) => sum + month.sales1404, 0) * 10) / 10,
+    sales1404,
+    margin1404: (row.profit1404 / sales1404) * 100,
     sales1405: hasComplete1405Quarter
       ? Math.round(months.reduce((sum, month) => sum + (month.sales1405 ?? 0), 0) * 10) / 10
       : null,
@@ -202,6 +204,8 @@ export default function Home() {
 function Overview({ market, shareholders }: { market: MarketSnapshot; shareholders: Shareholder[] }) {
   const yearlyMax = Math.max(...yearlyTrend.map((row) => row.sales));
   const seasonalMax = Math.max(...seasonalPerformance.flatMap((row) => row.sales1405 === null ? [row.sales1404, row.profit1404] : [row.sales1404, row.profit1404, row.sales1405]));
+  const seasonalMarginScaleMax = 50;
+  const seasonalMarginLinePoints = seasonalPerformance.map((row, index) => `${12.5 + index * 25},${100 - (row.margin1404 / seasonalMarginScaleMax) * 100}`).join(" ");
   const monthlySalesMax = Math.max(...publishedMonthlySalesTrend.flatMap((row) => [row.sales1404, row.sales1405 ?? 0]));
   const marginScaleMax = 50;
   const marginLinePoints = financialRows.map((row, index) => `${10 + index * 20},${100 - (row.margin / marginScaleMax) * 100}`).join(" ");
@@ -290,12 +294,12 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
           <div><span className="panel-label">عملکرد فصلی از ابتدای ۱۴۰۴ · کدال</span><h2>فروش و سود خالص فصلی</h2><DataBadges items={["رسمی", "فروش فصل: جمع ماهانه"]} /></div>
           <span className="unit">میلیارد تومان · فقط فصل‌های تکمیل‌شدهٔ ۱۴۰۵ نمایش داده می‌شوند</span>
         </div>
-        <ChartLegend items={[["فروش ۱۴۰۴", "sales-previous"], ["سود خالص ۱۴۰۴", "profit"], ["فروش ۱۴۰۵", "sales"]]} />
+        <ChartLegend items={[["فروش ۱۴۰۴", "sales-previous"], ["سود خالص ۱۴۰۴", "profit"], ["فروش ۱۴۰۵", "sales"], ["حاشیه سود خالص ۱۴۰۴", "margin"]]} />
         <div className="seasonal-scroll">
           <div className="seasonal-chart" aria-label="نمودار فروش و سود خالص فصلی از ۱۴۰۴؛ میلیارد تومان">
             {seasonalPerformance.map((row) => (
               <div className="season-group" key={row.season} tabIndex={0} aria-label={`${row.season}، فروش ۱۴۰۴ ${faNumber.format(row.sales1404)} و سود خالص ۱۴۰۴ ${faNumber.format(row.profit1404)} میلیارد تومان${row.sales1405 === null ? "" : ` و فروش ۱۴۰۵ ${faNumber.format(row.sales1405)} میلیارد تومان`}‌`}>
-                <ChartTooltip title={row.season} rows={row.sales1405 === null ? [["فروش ۱۴۰۴", row.sales1404, "sales-previous"], ["سود خالص ۱۴۰۴", row.profit1404, "profit"]] : [["فروش ۱۴۰۴", row.sales1404, "sales-previous"], ["سود خالص ۱۴۰۴", row.profit1404, "profit"], ["فروش ۱۴۰۵", row.sales1405, "sales"]]} />
+                <ChartTooltip title={row.season} rows={row.sales1405 === null ? [["فروش ۱۴۰۴", row.sales1404, "sales-previous"], ["سود خالص ۱۴۰۴", row.profit1404, "profit"], ["حاشیه سود خالص", row.margin1404, "margin", "٪"]] : [["فروش ۱۴۰۴", row.sales1404, "sales-previous"], ["سود خالص ۱۴۰۴", row.profit1404, "profit"], ["فروش ۱۴۰۵", row.sales1405, "sales"], ["حاشیه سود خالص", row.margin1404, "margin", "٪"]]} />
                 <div className="season-bars">
                   <span className="sales-previous-bar" style={{ height: `${(row.sales1404 / seasonalMax) * 100}%` }} />
                   <span className="profit-bar" style={{ height: `${(row.profit1404 / seasonalMax) * 100}%` }} />
@@ -304,6 +308,14 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
                 <small>{row.season}</small>
               </div>
             ))}
+            <div className="margin-overlay seasonal-margin-overlay" aria-hidden="true">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points={seasonalMarginLinePoints} /></svg>
+              {seasonalPerformance.map((row, index) => (
+                <span className="margin-point" key={row.season} style={{ left: `${12.5 + index * 25}%`, bottom: `${(row.margin1404 / seasonalMarginScaleMax) * 100}%` }}>
+                  <b>{faPercent.format(row.margin1404)}٪</b>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>

@@ -29,6 +29,7 @@ test("server-renders the Azim analysis dashboard", async () => {
   assert.match(html, /عملکرد فصلی از ابتدای ۱۴۰۴/);
   assert.match(html, /فروش و سود خالص فصلی/);
   assert.match(html, /فروش ۱۴۰۵/);
+  assert.match(html, /حاشیه سود خالص ۱۴۰۴/);
   assert.match(html, /فروش ماهانه؛ مقایسه ۱۴۰۴ و ۱۴۰۵/);
   assert.match(html, /آخرین گزارش منتشرشده/);
   assert.match(html, /حاشیه سود خالص/);

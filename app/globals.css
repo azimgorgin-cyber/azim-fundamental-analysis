@@ -172,7 +172,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .margin-point b { position: absolute; right: 50%; bottom: 8px; transform: translateX(50%); color: #5e458f; font-size: 8px; font-weight: 700; white-space: nowrap; direction: rtl; }
 .seasonal-panel { padding-bottom: 16px; }
 .seasonal-scroll { overflow-x: auto; overflow-y: visible; margin-top: 2px; }
-.seasonal-chart { min-width: 520px; height: 205px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: end; padding: 44px 12px 0; direction: ltr; }
+.seasonal-chart { min-width: 520px; height: 205px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: end; padding: 44px 12px 0; direction: ltr; position: relative; }
+.seasonal-margin-overlay { inset: 44px 12px 24px; }
 .season-group { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; outline: 0; }
 .season-bars { width: 100%; height: calc(100% - 24px); display: flex; justify-content: center; align-items: flex-end; gap: 5px; border-bottom: 1px solid var(--line); background: linear-gradient(to top, transparent 24%, #eef2f0 25%, transparent 26%, transparent 49%, #eef2f0 50%, transparent 51%, transparent 74%, #eef2f0 75%, transparent 76%); }
 .season-bars span { width: min(30px, 26%); }
