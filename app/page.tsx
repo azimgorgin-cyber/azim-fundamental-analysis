@@ -205,6 +205,7 @@ export default function Home() {
 }
 
 function Overview({ market, shareholders }: { market: MarketSnapshot; shareholders: Shareholder[] }) {
+  const [performancePeriod, setPerformancePeriod] = useState<"annual" | "quarterly">("quarterly");
   const yearlyMax = Math.max(...yearlyTrend.map((row) => row.sales));
   const seasonalMax = Math.max(...seasonalPerformance.flatMap((row) => row.sales1405 === null ? [row.sales1404, row.profit1404] : [row.sales1404, row.profit1404, row.sales1405]));
   const seasonalMarginScaleMax = 50;
@@ -219,20 +220,12 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
 
   return (
     <div className="view-content">
-      <section className="summary-grid">
-        <article className="score-card panel">
-          <div className="panel-label">وضعیت اعتبار داده</div>
-          <div className="score-row">
-            <div className="score-ring official"><strong>رسمی</strong><span>دو منبع</span></div>
-            <div>
-              <GuidedTitle guideKey="dataQuality">داده‌های رسمی کنترل و طبقه‌بندی شدند</GuidedTitle>
-              <p>قیمت و سهامداران از TSETMC؛ فروش و سود از کدال. اعداد محاسبه‌شده جدا از داده‌های رسمی علامت‌گذاری می‌شوند.</p>
-            </div>
-          </div>
+      <section className="summary-grid lower-priority-summary">
+        <article className="data-status-card panel">
+          <div className="compact-status-head"><div><span className="panel-label">وضعیت اعتبار داده</span><GuidedTitle guideKey="dataQuality">داده‌های رسمی و کنترل‌شده</GuidedTitle></div><b>رسمی</b></div>
+          <p>قیمت و سهامداران از TSETMC؛ صورت‌های مالی از کدال. محاسبات از ارقام رسمی جدا علامت‌گذاری شده‌اند.</p>
           <div className={`data-check ${salesReconciliation.status}`}>
-            <strong>کنترل تطبیق فروش ۱۴۰۴</strong>
-            <span>جمع ماهانه {faNumber.format(salesReconciliation.monthlyTotal)} در برابر فروش سالانه {faNumber.format(salesReconciliation.annualTotal)} میلیارد تومان</span>
-            <small>اختلاف {faNumber.format(salesReconciliation.difference)} میلیارد تومان · {faPercent.format(salesReconciliation.differencePercent)}٪</small>
+            <strong>تطبیق فروش ۱۴۰۴</strong><span>اختلاف جمع ماهانه با سالانه: {faPercent.format(salesReconciliation.differencePercent)}٪</span>
           </div>
           <div className="source-actions"><a href={TSETMC_URL} target="_blank" rel="noreferrer">مشاهده در TSETMC</a><a href={CODAL_URL} target="_blank" rel="noreferrer">آخرین صورت مالی کدال</a></div>
         </article>
@@ -247,40 +240,61 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
         </article>
       </section>
 
-      <section className="metrics" aria-label="شاخص‌های کلیدی">
+      <section className="metrics lower-priority-metrics" aria-label="شاخص‌های کلیدی">
         <Metric label="سرمایه ثبت‌شده" value={`${faNumber.format(officialData.registeredCapitalBillionToman)} میلیارد`} note="تومان · رسمی · کدال ۱۴۰۴" tone="positive" />
         <Metric label="تعداد سهام" value={faNumber.format(market.shares / 1_000_000_000) + " میلیارد"} note="TSETMC" tone="positive" />
         <Metric label="ارزش بازار" value={faNumber.format(marketValue) + " همت"} note="بر پایه قیمت پایانی" tone="neutral" />
         <Metric label="EPS دوازده‌ماهه" value={faNumber.format(market.eps / 10) + " تومان"} note={`P/E: ${faNumber.format(pe)}`} tone="neutral" />
       </section>
 
-      <section className="analysis-grid">
-        <article className="panel chart-panel">
+      <>
+        <article className="panel chart-panel performance-panel">
           <div className="panel-head">
-            <div><span className="panel-label">روند پنج‌ساله · کدال</span><GuidedTitle guideKey="annualTrend">فروش و سود خالص</GuidedTitle><DataBadges items={["رسمی", "حاشیه سود: محاسبه‌شده"]} /></div>
-            <strong className="growth"><bdi>+۷۳٫۹٪</bdi><small>رشد مرکب فروش</small></strong>
-          </div>
-          <ChartLegend items={[["فروش", "sales"], ["سود خالص", "profit"], ["حاشیه سود خالص", "margin"]]} />
-          <div className="bar-chart" aria-label="نمودار فروش و سود خالص پنج ساله؛ میلیارد تومان">
-            {yearlyTrend.map((row) => (
-              <div className="bar-column" key={row.year} tabIndex={0} aria-label={`${row.year}، فروش ${faNumber.format(row.sales)}، سود خالص ${faNumber.format(row.netProfit)} میلیارد تومان و حاشیه سود خالص ${faPercent.format((row.netProfit / row.sales) * 100)} درصد`}>
-                <ChartTooltip title={`سال ${row.year}`} rows={[["فروش", row.sales, "sales"], ["سود خالص", row.netProfit, "profit"], ["حاشیه سود خالص", (row.netProfit / row.sales) * 100, "margin", "٪"]]} />
-                <div className="bar-track dual">
-                  <span className="sales-bar" style={{ height: `${(row.sales / yearlyMax) * 100}%` }} />
-                  <span className="profit-bar" style={{ height: `${(row.netProfit / yearlyMax) * 100}%` }} />
-                </div>
-                <small>{row.year}</small>
+            <div><span className="panel-label">خلاصه عملکرد · کدال</span><GuidedTitle guideKey={performancePeriod === "annual" ? "annualTrend" : "seasonal"}>فروش، سود خالص و حاشیه سود</GuidedTitle><DataBadges items={["رسمی", "حاشیه سود: محاسبه‌شده"]} /></div>
+            <div className="performance-controls">
+              <div className="period-switch" role="group" aria-label="انتخاب دوره نمایش عملکرد">
+                <button className={performancePeriod === "quarterly" ? "active" : ""} onClick={() => setPerformancePeriod("quarterly")}>فصلی</button>
+                <button className={performancePeriod === "annual" ? "active" : ""} onClick={() => setPerformancePeriod("annual")}>سالانه</button>
               </div>
-            ))}
-            <div className="margin-overlay" aria-hidden="true">
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points={marginLinePoints} /></svg>
-              {financialRows.map((row, index) => (
-                <span className="margin-point" key={row.year} style={{ left: `${10 + index * 20}%`, bottom: `${(row.margin / marginScaleMax) * 100}%` }}>
-                  <b>{faPercent.format(row.margin)}٪</b>
-                </span>
-              ))}
+              <span className="unit">میلیارد تومان</span>
             </div>
           </div>
+          {performancePeriod === "annual" ? (
+            <>
+              <ChartLegend items={[["فروش", "sales"], ["سود خالص", "profit"], ["حاشیه سود خالص", "margin"]]} />
+              <div className="bar-chart" aria-label="نمودار فروش و سود خالص پنج ساله؛ میلیارد تومان">
+                {yearlyTrend.map((row) => (
+                  <div className="bar-column" key={row.year} tabIndex={0} aria-label={`${row.year}، فروش ${faNumber.format(row.sales)}، سود خالص ${faNumber.format(row.netProfit)} میلیارد تومان و حاشیه سود خالص ${faPercent.format((row.netProfit / row.sales) * 100)} درصد`}>
+                    <ChartTooltip title={`سال ${row.year}`} rows={[["فروش", row.sales, "sales"], ["سود خالص", row.netProfit, "profit"], ["حاشیه سود خالص", (row.netProfit / row.sales) * 100, "margin", "٪"]]} />
+                    <div className="bar-track dual"><span className="sales-bar" style={{ height: `${(row.sales / yearlyMax) * 100}%` }} /><span className="profit-bar" style={{ height: `${(row.netProfit / yearlyMax) * 100}%` }} /></div>
+                    <small>{row.year}</small>
+                  </div>
+                ))}
+                <div className="margin-overlay" aria-hidden="true">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points={marginLinePoints} /></svg>
+                  {financialRows.map((row, index) => <span className="margin-point" key={row.year} style={{ left: `${10 + index * 20}%`, bottom: `${(row.margin / marginScaleMax) * 100}%` }}><b>{faPercent.format(row.margin)}٪</b></span>)}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <ChartLegend items={[["فروش ۱۴۰۴", "sales-previous"], ["سود خالص ۱۴۰۳", "profit-previous"], ["سود خالص ۱۴۰۴", "profit"], ["فروش ۱۴۰۵", "sales"], ["حاشیه سود خالص ۱۴۰۴", "margin"]]} />
+              <div className="seasonal-scroll">
+                <div className="seasonal-chart performance-seasonal-chart" aria-label="مقایسه فصلی فروش و سود خالص؛ میلیارد تومان">
+                  {seasonalPerformance.map((row) => {
+                    const tooltipRows: [string, number, string, string?][] = [["فروش ۱۴۰۴", row.sales1404, "sales-previous"], ["سود خالص ۱۴۰۳", row.profit1403, "profit-previous"], ["سود خالص ۱۴۰۴", row.profit1404, "profit"], ["حاشیه سود خالص ۱۴۰۴", row.margin1404, "margin", "٪"]];
+                    if (row.sales1405 !== null) tooltipRows.splice(3, 0, ["فروش ۱۴۰۵", row.sales1405, "sales"]);
+                    return <div className="season-group" key={row.season} tabIndex={0}>
+                      <ChartTooltip title={row.season} rows={tooltipRows} />
+                      <div className="season-bars"><span className="sales-previous-bar" style={{ height: `${(row.sales1404 / seasonalMax) * 100}%` }} /><span className="profit-previous-bar" style={{ height: `${(row.profit1403 / seasonalMax) * 100}%` }} /><span className="profit-bar" style={{ height: `${(row.profit1404 / seasonalMax) * 100}%` }} />{row.sales1405 !== null && <span className="sales-bar" style={{ height: `${(row.sales1405 / seasonalMax) * 100}%` }} />}</div>
+                      <small>{row.season}</small>
+                    </div>;
+                  })}
+                  <div className="margin-overlay seasonal-margin-overlay" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points={seasonalMarginLinePoints} /></svg>{seasonalPerformance.map((row, index) => <span className="margin-point" key={row.season} style={{ left: `${12.5 + index * 25}%`, bottom: `${(row.margin1404 / seasonalMarginScaleMax) * 100}%` }}><b>{faPercent.format(row.margin1404)}٪</b></span>)}</div>
+                </div>
+              </div>
+            </>
+          )}
         </article>
 
         <article className="panel drivers-panel">
@@ -292,38 +306,7 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
             <li><span className="driver-icon down">↘</span><div><strong>مواد اولیه و سرمایه در گردش</strong><small>ارز، موجودی و دوره وصول مطالبات را باید هم‌زمان دید</small></div><bdi>متوسط</bdi></li>
           </ul>
         </article>
-      </section>
-
-      <section className="panel seasonal-panel">
-        <div className="panel-head">
-          <div><span className="panel-label">عملکرد فصلی از ابتدای ۱۴۰۴ · کدال</span><GuidedTitle guideKey="seasonal">فروش و سود خالص فصلی</GuidedTitle><DataBadges items={["رسمی", "فروش فصل: جمع ماهانه"]} /></div>
-          <span className="unit">میلیارد تومان · فقط فصل‌های تکمیل‌شدهٔ ۱۴۰۵ نمایش داده می‌شوند</span>
-        </div>
-        <ChartLegend items={[["فروش ۱۴۰۴", "sales-previous"], ["سود خالص ۱۴۰۴", "profit"], ["فروش ۱۴۰۵", "sales"], ["حاشیه سود خالص ۱۴۰۴", "margin"]]} />
-        <div className="seasonal-scroll">
-          <div className="seasonal-chart" aria-label="نمودار فروش و سود خالص فصلی از ۱۴۰۴؛ میلیارد تومان">
-            {seasonalPerformance.map((row) => (
-              <div className="season-group" key={row.season} tabIndex={0} aria-label={`${row.season}، فروش ۱۴۰۴ ${faNumber.format(row.sales1404)} و سود خالص ۱۴۰۴ ${faNumber.format(row.profit1404)} میلیارد تومان${row.sales1405 === null ? "" : ` و فروش ۱۴۰۵ ${faNumber.format(row.sales1405)} میلیارد تومان`}‌`}>
-                <ChartTooltip title={row.season} rows={row.sales1405 === null ? [["فروش ۱۴۰۴", row.sales1404, "sales-previous"], ["سود خالص ۱۴۰۴", row.profit1404, "profit"], ["حاشیه سود خالص", row.margin1404, "margin", "٪"]] : [["فروش ۱۴۰۴", row.sales1404, "sales-previous"], ["سود خالص ۱۴۰۴", row.profit1404, "profit"], ["فروش ۱۴۰۵", row.sales1405, "sales"], ["حاشیه سود خالص", row.margin1404, "margin", "٪"]]} />
-                <div className="season-bars">
-                  <span className="sales-previous-bar" style={{ height: `${(row.sales1404 / seasonalMax) * 100}%` }} />
-                  <span className="profit-bar" style={{ height: `${(row.profit1404 / seasonalMax) * 100}%` }} />
-                  {row.sales1405 !== null && <span className="sales-bar" style={{ height: `${(row.sales1405 / seasonalMax) * 100}%` }} />}
-                </div>
-                <small>{row.season}</small>
-              </div>
-            ))}
-            <div className="margin-overlay seasonal-margin-overlay" aria-hidden="true">
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points={seasonalMarginLinePoints} /></svg>
-              {seasonalPerformance.map((row, index) => (
-                <span className="margin-point" key={row.season} style={{ left: `${12.5 + index * 25}%`, bottom: `${(row.margin1404 / seasonalMarginScaleMax) * 100}%` }}>
-                  <b>{faPercent.format(row.margin1404)}٪</b>
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      </>
 
       <section className="panel monthly-panel">
         <div className="panel-head">
@@ -401,7 +384,7 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
         </div>
       </section>
 
-      <section className="analysis-grid official-grid">
+      <section className="analysis-grid official-grid lower-priority-official">
         <article className="panel market-facts">
           <div className="panel-label">اطلاعات اصلی نماد · TSETMC</div>
           <GuidedTitle guideKey="marketFacts">مشخصات بازار دزاگرس</GuidedTitle>
@@ -425,7 +408,7 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
         </article>
       </section>
 
-      <section className="analysis-grid bottom-grid">
+      <section className="analysis-grid bottom-grid thesis-risks-grid">
         <article className="panel">
           <div className="panel-label">تز اولیه</div>
           <GuidedTitle guideKey="thesisReasons">چرا ارزش بررسی دارد؟</GuidedTitle>
