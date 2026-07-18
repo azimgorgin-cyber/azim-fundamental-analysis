@@ -26,8 +26,9 @@ test("server-renders the Azim analysis dashboard", async () => {
   assert.match(html, /ارزش‌گذاری/);
   assert.match(html, /آخرین داده رسمی ذخیره‌شده/);
   assert.match(html, /فروش و سود خالص/);
-  assert.match(html, /مقایسه فصلی از ابتدای ۱۴۰۳/);
-  assert.match(html, /سود خالص فصلی؛ مقایسه ۱۴۰۳ و ۱۴۰۴/);
+  assert.match(html, /عملکرد فصلی از ابتدای ۱۴۰۴/);
+  assert.match(html, /فروش و سود خالص فصلی/);
+  assert.match(html, /فروش ۱۴۰۵/);
   assert.match(html, /فروش ماهانه؛ مقایسه ۱۴۰۴ و ۱۴۰۵/);
   assert.match(html, /آخرین گزارش منتشرشده/);
   assert.match(html, /حاشیه سود خالص/);
@@ -36,6 +37,7 @@ test("server-renders the Azim analysis dashboard", async () => {
   assert.match(html, /حاشیه سود: محاسبه‌شده/);
   assert.match(html, /سرمایه ثبت‌شده/);
   assert.match(html, /میلیارد تومان/);
+  assert.doesNotMatch(html, /رقم ۱۴۰۵ هنوز منتشر نشده/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
 });
 

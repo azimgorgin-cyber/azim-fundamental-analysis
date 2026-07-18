@@ -141,6 +141,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .chart-legend span { display: flex; align-items: center; gap: 5px; }
 .chart-legend i, .chart-tooltip i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; flex: 0 0 auto; }
 .chart-legend i.sales, .chart-tooltip i.sales { background: var(--green-2); }
+.chart-legend i.sales-previous, .chart-tooltip i.sales-previous { background: #8bb9a7; }
 .chart-legend i.profit, .chart-tooltip i.profit { background: var(--gold); }
 .chart-legend i.previous, .chart-tooltip i.previous { background: #8c9994; }
 .chart-legend i.margin, .chart-tooltip i.margin { width: 14px; height: 3px; border-radius: 4px; background: #7157a8; }
@@ -150,6 +151,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .bar-track.dual { justify-content: center; gap: 4px; padding: 0 5px; }
 .bar-track span, .season-bars span { display: block; width: min(22px, 42%); border-radius: 5px 5px 2px 2px; transition: height .5s ease, filter .2s ease; }
 .sales-bar { background: linear-gradient(#53a987, #17664e); }
+.sales-previous-bar { background: linear-gradient(#b2d2c5, #6f9f8d); }
 .profit-bar { background: linear-gradient(#e0b763, #b98224); }
 .previous-bar { background: linear-gradient(#aab4b0, #7b8983); }
 .bar-column small { color: var(--muted); font-size: 9px; }
@@ -173,13 +175,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .seasonal-chart { min-width: 520px; height: 205px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: end; padding: 44px 12px 0; direction: ltr; }
 .season-group { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; outline: 0; }
 .season-bars { width: 100%; height: calc(100% - 24px); display: flex; justify-content: center; align-items: flex-end; gap: 5px; border-bottom: 1px solid var(--line); background: linear-gradient(to top, transparent 24%, #eef2f0 25%, transparent 26%, transparent 49%, #eef2f0 50%, transparent 51%, transparent 74%, #eef2f0 75%, transparent 76%); }
-.season-bars span { width: min(32px, 34%); }
+.season-bars span { width: min(30px, 26%); }
 .season-group > small { color: var(--muted); font-size: 9px; }
 .monthly-panel { padding-bottom: 18px; overflow: visible; }
 .monthly-note { color: var(--muted); font-size: 9px; margin-top: 4px; }
 .source-link { flex: 0 0 auto; color: var(--green-2); border-bottom: 1px solid #9bc8b7; font-size: 9px; text-decoration: none; }
 .monthly-scroll { overflow-x: auto; overflow-y: visible; margin-top: 3px; }
-.monthly-chart { min-width: 960px; height: 225px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px; align-items: end; padding: 48px 8px 0; direction: ltr; }
+.monthly-chart { min-width: 0; height: 195px; display: grid; gap: 14px; align-items: end; padding: 42px 8px 0; direction: ltr; }
 .monthly-group { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 7px; position: relative; outline: 0; }
 .month-bars { width: 100%; height: calc(100% - 23px); display: flex; justify-content: center; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--line); background: linear-gradient(to top, transparent 24%, #eef2f0 25%, transparent 26%, transparent 49%, #eef2f0 50%, transparent 51%, transparent 74%, #eef2f0 75%, transparent 76%); }
 .month-bars span { display: block; width: min(22px, 38%); border-radius: 5px 5px 2px 2px; transition: height .5s ease, filter .2s ease; }
