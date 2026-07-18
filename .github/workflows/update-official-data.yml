@@ -55,7 +55,7 @@ jobs:
         run: |
           git fetch origin main
           git worktree add --detach /tmp/azim-pages origin/main
-          rsync -a --delete --exclude='.git/' pages-dist/ /tmp/azim-pages/
+          rsync -a --delete --exclude='.git' pages-dist/ /tmp/azim-pages/
           cd /tmp/azim-pages
           git add -A
           if ! git diff --cached --quiet; then
