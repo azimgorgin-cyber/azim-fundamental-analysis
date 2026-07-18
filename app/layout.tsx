@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: "عظیم | دستیار تحلیل بنیادی",
       description: "تحلیل بنیادی، ارزش‌گذاری و پایش تز سرمایه‌گذاری در یک نمای ساده و حرفه‌ای.",
-      images: [{ url: new URL("/og.png", origin).toString(), width: 1672, height: 941, alt: "عظیم، دستیار تحلیل بنیادی" }],
+      images: [{ url: new URL("/og.jpg", origin).toString(), width: 1200, height: 675, alt: "عظیم، دستیار تحلیل بنیادی" }],
       locale: "fa_IR",
       type: "website",
     },
@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: "عظیم | دستیار تحلیل بنیادی",
       description: "تحلیل بنیادی، ارزش‌گذاری و پایش تز سرمایه‌گذاری.",
-      images: [new URL("/og.png", origin).toString()],
+      images: [new URL("/og.jpg", origin).toString()],
     },
   };
 }
