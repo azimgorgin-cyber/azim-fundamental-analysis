@@ -21,10 +21,14 @@ test("server-renders the Azim analysis dashboard", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>عظیم \| دستیار تحلیل بنیادی<\/title>/);
-  assert.match(html, /جمع‌بندی بنیادی/);
+  assert.match(html, /وضعیت اعتبار داده/);
   assert.match(html, /صورت‌های مالی/);
   assert.match(html, /ارزش‌گذاری/);
-  assert.match(html, /داده‌های نمایشی/);
+  assert.match(html, /آخرین داده رسمی ذخیره‌شده/);
+  assert.match(html, /فروش و سود خالص/);
+  assert.match(html, /مقایسه فصلی از ابتدای ۱۴۰۳/);
+  assert.match(html, /سرمایه ثبت‌شده/);
+  assert.match(html, /میلیارد تومان/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
 });
 
