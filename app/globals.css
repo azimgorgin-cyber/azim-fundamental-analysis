@@ -107,6 +107,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .source-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
 .source-actions a { color: white; border: 1px solid rgba(255,255,255,.22); border-radius: 8px; padding: 5px 9px; font-size: 9px; text-decoration: none; transition: .2s ease; }
 .source-actions a:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.4); }
+.data-check { margin: 13px 0 3px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.08); border-right: 3px solid #e7b95e; }
+.data-check strong, .data-check span, .data-check small { display: block; }
+.data-check strong { font-size: 9px; }
+.data-check span { margin-top: 3px; color: rgba(255,255,255,.88); font-size: 8px; }
+.data-check small { margin-top: 2px; color: rgba(255,255,255,.58); font-size: 8px; }
+.data-check.needs_review { background: rgba(231,185,94,.14); border-right-color: #ef9b67; }
+.data-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.data-badges span { padding: 3px 7px; border-radius: 999px; font-size: 7px; line-height: 1.4; }
+.data-badges .official { color: var(--green); background: var(--green-soft); }
+.data-badges .derived { color: #675486; background: #f0ebf8; }
 .thesis-card blockquote { margin: 12px 0 24px; font-size: 20px; font-weight: 700; line-height: 1.8; letter-spacing: -.5px; }
 .signal-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .signal-row span { padding: 5px 9px; border-radius: 7px; font-size: 10px; }

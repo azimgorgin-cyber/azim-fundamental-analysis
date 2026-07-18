@@ -29,8 +29,11 @@ test("server-renders the Azim analysis dashboard", async () => {
   assert.match(html, /مقایسه فصلی از ابتدای ۱۴۰۳/);
   assert.match(html, /سود خالص فصلی؛ مقایسه ۱۴۰۳ و ۱۴۰۴/);
   assert.match(html, /فروش ماهانه؛ مقایسه ۱۴۰۴ و ۱۴۰۵/);
-  assert.match(html, /اطلاعات ۱۴۰۵ تا پایان خرداد منتشر شده است/);
+  assert.match(html, /آخرین گزارش منتشرشده/);
   assert.match(html, /حاشیه سود خالص/);
+  assert.match(html, /کنترل تطبیق فروش ۱۴۰۴/);
+  assert.match(html, /به‌روزرسانی خودکار روزانه/);
+  assert.match(html, /حاشیه سود: محاسبه‌شده/);
   assert.match(html, /سرمایه ثبت‌شده/);
   assert.match(html, /میلیارد تومان/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);

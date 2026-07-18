@@ -1,0 +1,64 @@
+name: Update official market data
+
+on:
+  schedule:
+    - cron: "30 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: official-data-update
+  cancel-in-progress: false
+
+jobs:
+  update-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source branch
+        uses: actions/checkout@v4
+        with:
+          ref: source
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Refresh official data
+        run: pnpm data:update
+
+      - name: Validate and build
+        run: |
+          pnpm test
+          pnpm build:pages
+
+      - name: Save refreshed source data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/data/dezagros-official.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update official Dezagros data"
+            git push origin HEAD:source
+          fi
+
+      - name: Publish GitHub Pages branch
+        run: |
+          git fetch origin main
+          git worktree add --detach /tmp/azim-pages origin/main
+          rsync -a --delete --exclude='.git/' pages-dist/ /tmp/azim-pages/
+          cd /tmp/azim-pages
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish refreshed official data"
+            git push origin HEAD:main
+          fi

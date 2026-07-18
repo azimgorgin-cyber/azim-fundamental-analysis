@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import officialData from "./data/dezagros-official.json";
 
 type View = "overview" | "financials" | "valuation";
 
-const TSETMC_INSTRUMENT_ID = "43450146028916610";
+const TSETMC_INSTRUMENT_ID = officialData.instrumentId;
 const TSETMC_URL = `https://www.tsetmc.com/instInfo/${TSETMC_INSTRUMENT_ID}`;
-const CODAL_URL = "https://www.codal.ir/Reports/Decision.aspx?LetterSerial=Wrkmb17ieruWpxFvobgbyw%3d%3d&rt=0&let=6&ct=0&ft=-1";
-const MONTHLY_CODAL_URL = "https://www.codal.ir/Reports/Decision.aspx?LetterSerial=6u1x56oerl9Nt0YOOObOOOTw4oQQQaQQQA%3d%3d&rt=0&let=58&ct=0&ft=-1";
+const CODAL_URL = officialData.sources.codalAnnual.url;
+const MONTHLY_CODAL_URL = officialData.sources.codalMonthly.url;
 
 type MarketSnapshot = {
   lastPrice: number;
@@ -27,54 +28,13 @@ type Shareholder = {
   date: number;
 };
 
-const officialSnapshot: MarketSnapshot = {
-  lastPrice: 19210,
-  closingPrice: 19210,
-  yesterdayPrice: 19800,
-  date: 20260718,
-  time: 122844,
-  shares: 7_700_000_000,
-  eps: 1982,
-  sectorPe: 9.73,
-};
-
-const officialShareholders: Shareholder[] = [
-  { name: "شخص حقیقی", shares: 3_866_332_015, percent: 50.212, date: 20260718 },
-  { name: "شخص حقیقی", shares: 723_231_281, percent: 9.392, date: 20260718 },
-  { name: "صندوق سرمایه‌گذاری ا.ب تصمیم‌ساز", shares: 402_300_000, percent: 5.224, date: 20260718 },
-  { name: "شخص حقیقی خارجی", shares: 212_882_216, percent: 2.764, date: 20260718 },
-  { name: "سرمایه‌گذاری آتیه سپهر سنا", shares: 138_263_601, percent: 1.795, date: 20260718 },
-];
-
-const yearlyTrend = [
-  { year: "۱۴۰۰", sales: 395.2, netProfit: 62.8, status: "حسابرسی‌نشده" },
-  { year: "۱۴۰۱", sales: 924.9, netProfit: 391.6, status: "حسابرسی‌شده" },
-  { year: "۱۴۰۲", sales: 1631.4, netProfit: 487.4, status: "حسابرسی‌شده" },
-  { year: "۱۴۰۳", sales: 2596.1, netProfit: 995.1, status: "حسابرسی‌شده" },
-  { year: "۱۴۰۴", sales: 3614.8, netProfit: 1526.2, status: "حسابرسی‌شده" },
-];
-
-const seasonalTrend = [
-  { season: "بهار", profit1403: 208.5, profit1404: 315.8 },
-  { season: "تابستان", profit1403: 310.4, profit1404: 449.4 },
-  { season: "پاییز", profit1403: 187.1, profit1404: 444.7 },
-  { season: "زمستان", profit1403: 289.1, profit1404: 316.4 },
-];
-
-const monthlySalesTrend = [
-  { month: "فروردین", sales1404: 280.3, sales1405: 550.4 },
-  { month: "اردیبهشت", sales1404: 320.1, sales1405: 1052.3 },
-  { month: "خرداد", sales1404: 212.4, sales1405: 1200.5 },
-  { month: "تیر", sales1404: 300.4, sales1405: null },
-  { month: "مرداد", sales1404: 261.6, sales1405: null },
-  { month: "شهریور", sales1404: 431.1, sales1405: null },
-  { month: "مهر", sales1404: 319.1, sales1405: null },
-  { month: "آبان", sales1404: 386.9, sales1405: null },
-  { month: "آذر", sales1404: 366.7, sales1405: null },
-  { month: "دی", sales1404: 247.4, sales1405: null },
-  { month: "بهمن", sales1404: 403.7, sales1405: null },
-  { month: "اسفند", sales1404: 102.7, sales1405: null },
-];
+const officialSnapshot: MarketSnapshot = officialData.marketSnapshot;
+const officialShareholders: Shareholder[] = officialData.shareholders;
+const yearlyTrend = officialData.yearlyTrend;
+const seasonalTrend = officialData.seasonalTrend;
+const monthlySalesTrend = officialData.monthlySalesTrend;
+const dataSources = officialData.sources;
+const salesReconciliation = officialData.validation.monthlyToAnnualSales1404;
 
 const financialRows = yearlyTrend.map((row) => ({
   ...row,
@@ -83,6 +43,10 @@ const financialRows = yearlyTrend.map((row) => ({
 
 const faNumber = new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 1 });
 const faPercent = new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 2 });
+
+function toFaDigits(value: string) {
+  return value.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
+}
 
 function formatMarketDate(value: number) {
   const raw = String(value);
@@ -99,6 +63,10 @@ function formatShares(value: number) {
   return value >= 1_000_000_000
     ? `${faNumber.format(value / 1_000_000_000)} میلیارد سهم`
     : `${faNumber.format(value / 1_000_000)} میلیون سهم`;
+}
+
+function normalizePersianName(value: string) {
+  return value.replace(/^BFM/, "").replaceAll("ي", "ی").replaceAll("ك", "ک").replace(/\s+/g, " ").trim();
 }
 
 function useOfficialMarketData() {
@@ -132,10 +100,10 @@ function useOfficialMarketData() {
           setShareholders(
             shareholderData.shareShareholder
               .map((item: { shareHolderName: string; numberOfShares: number; perOfShares: number; dEven: number }) => ({
-                name: item.shareHolderName,
+                name: normalizePersianName(item.shareHolderName),
                 shares: item.numberOfShares,
                 percent: item.perOfShares,
-                date: item.dEven,
+                date: Math.min(item.dEven, price.dEven),
               }))
               .sort((a: Shareholder, b: Shareholder) => b.percent - a.percent),
           );
@@ -236,9 +204,14 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
           <div className="score-row">
             <div className="score-ring official"><strong>رسمی</strong><span>دو منبع</span></div>
             <div>
-              <h2>داده‌های کلیدی تطبیق شدند</h2>
-              <p>قیمت، تعداد سهام و سهامداران از TSETMC؛ فروش، سود خالص و سرمایه ثبت‌شده از گزارش‌های رسمی کدال.</p>
+              <h2>داده‌های رسمی کنترل و طبقه‌بندی شدند</h2>
+              <p>قیمت و سهامداران از TSETMC؛ فروش و سود از کدال. اعداد محاسبه‌شده جدا از داده‌های رسمی علامت‌گذاری می‌شوند.</p>
             </div>
+          </div>
+          <div className={`data-check ${salesReconciliation.status}`}>
+            <strong>کنترل تطبیق فروش ۱۴۰۴</strong>
+            <span>جمع ماهانه {faNumber.format(salesReconciliation.monthlyTotal)} در برابر فروش سالانه {faNumber.format(salesReconciliation.annualTotal)} میلیارد تومان</span>
+            <small>اختلاف {faNumber.format(salesReconciliation.difference)} میلیارد تومان · {faPercent.format(salesReconciliation.differencePercent)}٪</small>
           </div>
           <div className="source-actions"><a href={TSETMC_URL} target="_blank" rel="noreferrer">مشاهده در TSETMC</a><a href={CODAL_URL} target="_blank" rel="noreferrer">آخرین صورت مالی کدال</a></div>
         </article>
@@ -254,7 +227,7 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
       </section>
 
       <section className="metrics" aria-label="شاخص‌های کلیدی">
-        <Metric label="سرمایه ثبت‌شده" value="۷۷۰ میلیارد" note="تومان · کدال ۱۴۰۴" tone="positive" />
+        <Metric label="سرمایه ثبت‌شده" value={`${faNumber.format(officialData.registeredCapitalBillionToman)} میلیارد`} note="تومان · رسمی · کدال ۱۴۰۴" tone="positive" />
         <Metric label="تعداد سهام" value={faNumber.format(market.shares / 1_000_000_000) + " میلیارد"} note="TSETMC" tone="positive" />
         <Metric label="ارزش بازار" value={faNumber.format(marketValue) + " همت"} note="بر پایه قیمت پایانی" tone="neutral" />
         <Metric label="EPS دوازده‌ماهه" value={faNumber.format(market.eps / 10) + " تومان"} note={`P/E: ${faNumber.format(pe)}`} tone="neutral" />
@@ -263,7 +236,7 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
       <section className="analysis-grid">
         <article className="panel chart-panel">
           <div className="panel-head">
-            <div><span className="panel-label">روند پنج‌ساله · کدال</span><h2>فروش و سود خالص</h2></div>
+            <div><span className="panel-label">روند پنج‌ساله · کدال</span><h2>فروش و سود خالص</h2><DataBadges items={["رسمی", "حاشیه سود: محاسبه‌شده"]} /></div>
             <strong className="growth"><bdi>+۷۳٫۹٪</bdi><small>رشد مرکب فروش</small></strong>
           </div>
           <ChartLegend items={[["فروش", "sales"], ["سود خالص", "profit"], ["حاشیه سود خالص", "margin"]]} />
@@ -302,7 +275,7 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
 
       <section className="panel seasonal-panel">
         <div className="panel-head">
-          <div><span className="panel-label">مقایسه فصلی از ابتدای ۱۴۰۳ · کدال</span><h2>سود خالص فصلی؛ مقایسه ۱۴۰۳ و ۱۴۰۴</h2></div>
+          <div><span className="panel-label">مقایسه فصلی از ابتدای ۱۴۰۳ · کدال</span><h2>سود خالص فصلی؛ مقایسه ۱۴۰۳ و ۱۴۰۴</h2><DataBadges items={["رسمی", "فصل‌ها: محاسبه‌شده"]} /></div>
           <span className="unit">میلیارد تومان · فصل‌ها از تفاضل گزارش‌های تجمعی محاسبه شده‌اند</span>
         </div>
         <ChartLegend items={[["سود خالص ۱۴۰۳", "previous"], ["سود خالص ۱۴۰۴", "profit"]]} />
@@ -324,10 +297,10 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
 
       <section className="panel monthly-panel">
         <div className="panel-head">
-          <div><span className="panel-label">گزارش‌های فعالیت ماهانه · کدال</span><h2>فروش ماهانه؛ مقایسه ۱۴۰۴ و ۱۴۰۵</h2></div>
+          <div><span className="panel-label">گزارش‌های فعالیت ماهانه · کدال</span><h2>فروش ماهانه؛ مقایسه ۱۴۰۴ و ۱۴۰۵</h2><DataBadges items={["رسمی", `تا ${toFaDigits(dataSources.codalMonthly.asOf)}`]} /></div>
           <a className="source-link" href={MONTHLY_CODAL_URL} target="_blank" rel="noreferrer">آخرین گزارش ماهانه کدال</a>
         </div>
-        <div className="monthly-note">میلیارد تومان · اطلاعات ۱۴۰۵ تا پایان خرداد منتشر شده است</div>
+        <div className="monthly-note">میلیارد تومان · آخرین گزارش منتشرشده: {toFaDigits(dataSources.codalMonthly.publishedAt)} · به‌روزرسانی خودکار روزانه</div>
         <ChartLegend items={[["فروش ۱۴۰۴", "previous"], ["فروش ۱۴۰۵", "sales"]]} />
         <div className="monthly-scroll">
           <div className="monthly-chart" aria-label="نمودار مقایسه فروش ماهانه ۱۴۰۴ و ۱۴۰۵؛ میلیارد تومان">
@@ -405,6 +378,10 @@ function Metric({ label, value, note, tone }: { label: string; value: string; no
       <span className={tone}>{note}</span>
     </article>
   );
+}
+
+function DataBadges({ items }: { items: string[] }) {
+  return <div className="data-badges">{items.map((item, index) => <span className={index === 0 ? "official" : "derived"} key={item}>{item}</span>)}</div>;
 }
 
 function ChartLegend({ items }: { items: [string, string][] }) {
