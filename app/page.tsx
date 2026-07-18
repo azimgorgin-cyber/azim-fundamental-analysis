@@ -7,6 +7,7 @@ type View = "overview" | "financials" | "valuation";
 const TSETMC_INSTRUMENT_ID = "43450146028916610";
 const TSETMC_URL = `https://www.tsetmc.com/instInfo/${TSETMC_INSTRUMENT_ID}`;
 const CODAL_URL = "https://www.codal.ir/Reports/Decision.aspx?LetterSerial=Wrkmb17ieruWpxFvobgbyw%3d%3d&rt=0&let=6&ct=0&ft=-1";
+const MONTHLY_CODAL_URL = "https://www.codal.ir/Reports/Decision.aspx?LetterSerial=6u1x56oerl9Nt0YOOObOOOTw4oQQQaQQQA%3d%3d&rt=0&let=58&ct=0&ft=-1";
 
 type MarketSnapshot = {
   lastPrice: number;
@@ -58,6 +59,21 @@ const seasonalTrend = [
   { season: "تابستان", profit1403: 310.4, profit1404: 449.4 },
   { season: "پاییز", profit1403: 187.1, profit1404: 444.7 },
   { season: "زمستان", profit1403: 289.1, profit1404: 316.4 },
+];
+
+const monthlySalesTrend = [
+  { month: "فروردین", sales1404: 280.3, sales1405: 550.4 },
+  { month: "اردیبهشت", sales1404: 320.1, sales1405: 1052.3 },
+  { month: "خرداد", sales1404: 212.4, sales1405: 1200.5 },
+  { month: "تیر", sales1404: 300.4, sales1405: null },
+  { month: "مرداد", sales1404: 261.6, sales1405: null },
+  { month: "شهریور", sales1404: 431.1, sales1405: null },
+  { month: "مهر", sales1404: 319.1, sales1405: null },
+  { month: "آبان", sales1404: 386.9, sales1405: null },
+  { month: "آذر", sales1404: 366.7, sales1405: null },
+  { month: "دی", sales1404: 247.4, sales1405: null },
+  { month: "بهمن", sales1404: 403.7, sales1405: null },
+  { month: "اسفند", sales1404: 102.7, sales1405: null },
 ];
 
 const financialRows = yearlyTrend.map((row) => ({
@@ -206,6 +222,9 @@ export default function Home() {
 function Overview({ market, shareholders }: { market: MarketSnapshot; shareholders: Shareholder[] }) {
   const yearlyMax = Math.max(...yearlyTrend.map((row) => row.sales));
   const seasonalMax = Math.max(...seasonalTrend.flatMap((row) => [row.profit1403, row.profit1404]));
+  const monthlySalesMax = Math.max(...monthlySalesTrend.flatMap((row) => row.sales1405 === null ? [row.sales1404] : [row.sales1404, row.sales1405]));
+  const marginScaleMax = 50;
+  const marginLinePoints = financialRows.map((row, index) => `${10 + index * 20},${100 - (row.margin / marginScaleMax) * 100}`).join(" ");
   const marketValue = (market.closingPrice * market.shares) / 10_000_000_000_000;
   const pe = market.closingPrice / market.eps;
 
@@ -247,11 +266,11 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
             <div><span className="panel-label">روند پنج‌ساله · کدال</span><h2>فروش و سود خالص</h2></div>
             <strong className="growth"><bdi>+۷۳٫۹٪</bdi><small>رشد مرکب فروش</small></strong>
           </div>
-          <ChartLegend items={[["فروش", "sales"], ["سود خالص", "profit"]]} />
+          <ChartLegend items={[["فروش", "sales"], ["سود خالص", "profit"], ["حاشیه سود خالص", "margin"]]} />
           <div className="bar-chart" aria-label="نمودار فروش و سود خالص پنج ساله؛ میلیارد تومان">
             {yearlyTrend.map((row) => (
-              <div className="bar-column" key={row.year} tabIndex={0} aria-label={`${row.year}، فروش ${faNumber.format(row.sales)} و سود خالص ${faNumber.format(row.netProfit)} میلیارد تومان`}>
-                <ChartTooltip title={`سال ${row.year}`} rows={[["فروش", row.sales, "sales"], ["سود خالص", row.netProfit, "profit"]]} />
+              <div className="bar-column" key={row.year} tabIndex={0} aria-label={`${row.year}، فروش ${faNumber.format(row.sales)}، سود خالص ${faNumber.format(row.netProfit)} میلیارد تومان و حاشیه سود خالص ${faPercent.format((row.netProfit / row.sales) * 100)} درصد`}>
+                <ChartTooltip title={`سال ${row.year}`} rows={[["فروش", row.sales, "sales"], ["سود خالص", row.netProfit, "profit"], ["حاشیه سود خالص", (row.netProfit / row.sales) * 100, "margin", "٪"]]} />
                 <div className="bar-track dual">
                   <span className="sales-bar" style={{ height: `${(row.sales / yearlyMax) * 100}%` }} />
                   <span className="profit-bar" style={{ height: `${(row.netProfit / yearlyMax) * 100}%` }} />
@@ -259,6 +278,14 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
                 <small>{row.year}</small>
               </div>
             ))}
+            <div className="margin-overlay" aria-hidden="true">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points={marginLinePoints} /></svg>
+              {financialRows.map((row, index) => (
+                <span className="margin-point" key={row.year} style={{ left: `${10 + index * 20}%`, bottom: `${(row.margin / marginScaleMax) * 100}%` }}>
+                  <b>{faPercent.format(row.margin)}٪</b>
+                </span>
+              ))}
+            </div>
           </div>
         </article>
 
@@ -291,6 +318,33 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
                 <small>{row.season}</small>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="panel monthly-panel">
+        <div className="panel-head">
+          <div><span className="panel-label">گزارش‌های فعالیت ماهانه · کدال</span><h2>فروش ماهانه؛ مقایسه ۱۴۰۴ و ۱۴۰۵</h2></div>
+          <a className="source-link" href={MONTHLY_CODAL_URL} target="_blank" rel="noreferrer">آخرین گزارش ماهانه کدال</a>
+        </div>
+        <div className="monthly-note">میلیارد تومان · اطلاعات ۱۴۰۵ تا پایان خرداد منتشر شده است</div>
+        <ChartLegend items={[["فروش ۱۴۰۴", "previous"], ["فروش ۱۴۰۵", "sales"]]} />
+        <div className="monthly-scroll">
+          <div className="monthly-chart" aria-label="نمودار مقایسه فروش ماهانه ۱۴۰۴ و ۱۴۰۵؛ میلیارد تومان">
+            {monthlySalesTrend.map((row) => {
+              const tooltipRows: [string, number, string, string?][] = [["فروش ۱۴۰۴", row.sales1404, "previous"]];
+              if (row.sales1405 !== null) tooltipRows.push(["فروش ۱۴۰۵", row.sales1405, "sales"]);
+              return (
+                <div className="monthly-group" key={row.month} tabIndex={0} aria-label={`${row.month}، فروش ۱۴۰۴ ${faNumber.format(row.sales1404)} میلیارد تومان${row.sales1405 === null ? "؛ رقم ۱۴۰۵ هنوز منتشر نشده" : ` و فروش ۱۴۰۵ ${faNumber.format(row.sales1405)} میلیارد تومان`}`}>
+                  <ChartTooltip title={row.month} rows={tooltipRows} />
+                  <div className="month-bars">
+                    <span className="previous-bar" style={{ height: `${(row.sales1404 / monthlySalesMax) * 100}%` }} />
+                    {row.sales1405 !== null && <span className="sales-bar" style={{ height: `${(row.sales1405 / monthlySalesMax) * 100}%` }} />}
+                  </div>
+                  <small>{row.month}</small>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -357,11 +411,11 @@ function ChartLegend({ items }: { items: [string, string][] }) {
   return <div className="chart-legend">{items.map(([label, tone]) => <span key={label}><i className={tone} />{label}</span>)}</div>;
 }
 
-function ChartTooltip({ title, rows }: { title: string; rows: [string, number, string][] }) {
+function ChartTooltip({ title, rows }: { title: string; rows: [string, number, string, string?][] }) {
   return (
     <div className="chart-tooltip" role="tooltip">
       <strong>{title}</strong>
-      {rows.map(([label, value, tone]) => <span key={label}><i className={tone} />{label}<b>{faNumber.format(value)} میلیارد تومان</b></span>)}
+      {rows.map(([label, value, tone, unit = "میلیارد تومان"]) => <span key={label}><i className={tone} />{label}<b>{faNumber.format(value)} {unit}</b></span>)}
     </div>
   );
 }
