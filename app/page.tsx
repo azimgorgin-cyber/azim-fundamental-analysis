@@ -54,10 +54,10 @@ const yearlyTrend = [
 ];
 
 const seasonalTrend = [
-  { season: "بهار", sales1404: 812.8, profit1403: 208.5, profit1404: 315.8 },
-  { season: "تابستان", sales1404: 984.8, profit1403: 310.4, profit1404: 449.4 },
-  { season: "پاییز", sales1404: 1071.3, profit1403: 187.1, profit1404: 444.7 },
-  { season: "زمستان", sales1404: 745.8, profit1403: 289.1, profit1404: 316.4 },
+  { season: "بهار", profit1403: 208.5, profit1404: 315.8 },
+  { season: "تابستان", profit1403: 310.4, profit1404: 449.4 },
+  { season: "پاییز", profit1403: 187.1, profit1404: 444.7 },
+  { season: "زمستان", profit1403: 289.1, profit1404: 316.4 },
 ];
 
 const financialRows = yearlyTrend.map((row) => ({
@@ -205,7 +205,7 @@ export default function Home() {
 
 function Overview({ market, shareholders }: { market: MarketSnapshot; shareholders: Shareholder[] }) {
   const yearlyMax = Math.max(...yearlyTrend.map((row) => row.sales));
-  const seasonalMax = Math.max(...seasonalTrend.map((row) => row.sales1404));
+  const seasonalMax = Math.max(...seasonalTrend.flatMap((row) => [row.profit1403, row.profit1404]));
   const marketValue = (market.closingPrice * market.shares) / 10_000_000_000_000;
   const pe = market.closingPrice / market.eps;
 
@@ -275,17 +275,16 @@ function Overview({ market, shareholders }: { market: MarketSnapshot; shareholde
 
       <section className="panel seasonal-panel">
         <div className="panel-head">
-          <div><span className="panel-label">مقایسه فصلی از ابتدای ۱۴۰۳ · کدال</span><h2>فروش ۱۴۰۴ در کنار سود خالص دو سال</h2></div>
+          <div><span className="panel-label">مقایسه فصلی از ابتدای ۱۴۰۳ · کدال</span><h2>سود خالص فصلی؛ مقایسه ۱۴۰۳ و ۱۴۰۴</h2></div>
           <span className="unit">میلیارد تومان · فصل‌ها از تفاضل گزارش‌های تجمعی محاسبه شده‌اند</span>
         </div>
-        <ChartLegend items={[["فروش ۱۴۰۴", "sales"], ["سود خالص ۱۴۰۳", "previous"], ["سود خالص ۱۴۰۴", "profit"]]} />
+        <ChartLegend items={[["سود خالص ۱۴۰۳", "previous"], ["سود خالص ۱۴۰۴", "profit"]]} />
         <div className="seasonal-scroll">
-          <div className="seasonal-chart" aria-label="نمودار فصلی فروش و سود خالص ۱۴۰۳ و ۱۴۰۴؛ میلیارد تومان">
+          <div className="seasonal-chart" aria-label="نمودار مقایسه سود خالص فصلی ۱۴۰۳ و ۱۴۰۴؛ میلیارد تومان">
             {seasonalTrend.map((row) => (
-              <div className="season-group" key={row.season} tabIndex={0} aria-label={`${row.season}، فروش ۱۴۰۴ ${faNumber.format(row.sales1404)}، سود خالص ۱۴۰۳ ${faNumber.format(row.profit1403)} و سود خالص ۱۴۰۴ ${faNumber.format(row.profit1404)} میلیارد تومان`}>
-                <ChartTooltip title={row.season} rows={[["فروش ۱۴۰۴", row.sales1404, "sales"], ["سود خالص ۱۴۰۳", row.profit1403, "previous"], ["سود خالص ۱۴۰۴", row.profit1404, "profit"]]} />
+              <div className="season-group" key={row.season} tabIndex={0} aria-label={`${row.season}، سود خالص ۱۴۰۳ ${faNumber.format(row.profit1403)} و سود خالص ۱۴۰۴ ${faNumber.format(row.profit1404)} میلیارد تومان`}>
+                <ChartTooltip title={row.season} rows={[["سود خالص ۱۴۰۳", row.profit1403, "previous"], ["سود خالص ۱۴۰۴", row.profit1404, "profit"]]} />
                 <div className="season-bars">
-                  <span className="sales-bar" style={{ height: `${(row.sales1404 / seasonalMax) * 100}%` }} />
                   <span className="previous-bar" style={{ height: `${(row.profit1403 / seasonalMax) * 100}%` }} />
                   <span className="profit-bar" style={{ height: `${(row.profit1404 / seasonalMax) * 100}%` }} />
                 </div>
