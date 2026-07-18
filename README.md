@@ -30,3 +30,11 @@ pnpm dev
 ```bash
 pnpm build
 ```
+
+## ساخت نسخه GitHub Pages
+
+```bash
+pnpm build:pages
+```
+
+خروجی استاتیک در پوشه `pages-dist` ساخته می‌شود و قیمت و سهامداران را مستقیماً از سرویس عمومی TSETMC دریافت می‌کند.
